@@ -22,3 +22,6 @@ pnpm-debug.log*
 # Optional local env files
 .env
 .env.*
+
+# Local Node.js
+node-v20*

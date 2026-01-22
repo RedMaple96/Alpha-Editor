@@ -271,6 +271,67 @@ const tools = [
   { id: 'lasso-select', icon: LassoIcon, label: '套索' },
 ]
 
+const DownloadDialog = ({ isOpen, onClose, onConfirm, defaultName }) => {
+  const [fileName, setFileName] = useState(defaultName)
+
+  useEffect(() => {
+    if (isOpen) {
+      setFileName(defaultName)
+    }
+  }, [isOpen, defaultName])
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="bg-background border border-accent rounded-lg shadow-2xl w-[400px] overflow-hidden">
+        <div className="flex items-center justify-between p-4 border-b border-accent bg-muted/30">
+          <h3 className="font-bold">保存图片</h3>
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-accent rounded transition-colors text-muted-foreground hover:text-foreground"
+          >
+            <Icon path={<path d="M18 6 6 18M6 6l12 12" />} />
+          </button>
+        </div>
+        <div className="p-6 space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">文件名</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={fileName}
+                onChange={(e) => setFileName(e.target.value)}
+                className="flex-1 bg-accent/50 border border-accent rounded px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') onConfirm(fileName)
+                  if (e.key === 'Escape') onClose()
+                }}
+              />
+              <span className="text-muted-foreground text-sm">.png</span>
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 p-4 border-t border-accent bg-muted/30">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm rounded hover:bg-accent transition-colors"
+          >
+            取消
+          </button>
+          <button
+            onClick={() => onConfirm(fileName)}
+            className="px-4 py-2 text-sm rounded bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-medium"
+          >
+            保存
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const ChevronLeftIcon = () => (
   <Icon
     path={<path d="m15 18-6-6 6-6" />}
@@ -1270,11 +1331,17 @@ export default function App() {
   })
   
   const [showShortcuts, setShowShortcuts] = useState(false)
+  const [showDownloadDialog, setShowDownloadDialog] = useState(false)
   const [wheelAction, setWheelAction] = useState('zoom') // 'zoom' or 'brush'
 
   const [image, setImage] = useState(null)
+  const [imageName, setImageName] = useState('')
 
   const handleImageUpload = (file) => {
+    // 保存原始文件名（去除扩展名）
+    const name = file.name.replace(/\.[^/.]+$/, "")
+    setImageName(name)
+
     const reader = new FileReader()
     reader.onload = (e) => {
       const img = new Image()
@@ -1318,11 +1385,20 @@ export default function App() {
 
   const handleDownload = () => {
     if (!image) return
+    setShowDownloadDialog(true)
+  }
+
+  const handleConfirmDownload = (fileName) => {
+    setShowDownloadDialog(false)
     const dataUrl = window.__alphaEditorDebug?.exportPNG?.()
     if (!dataUrl) return
+
+    const defaultName = imageName || `alpha-editor-${Date.now()}`
+    const finalName = fileName || defaultName
+
     const a = document.createElement('a')
     a.href = dataUrl
-    a.download = `alpha-editor-${Date.now()}.png`
+    a.download = `${finalName}.png`
     document.body.appendChild(a)
     a.click()
     a.remove()
@@ -1478,6 +1554,12 @@ export default function App() {
           onClose={() => setShowShortcuts(false)}
         />
       )}
+      <DownloadDialog
+        isOpen={showDownloadDialog}
+        onClose={() => setShowDownloadDialog(false)}
+        onConfirm={handleConfirmDownload}
+        defaultName={imageName || `alpha-editor-${Date.now()}`}
+      />
     </div>
   )
 }
