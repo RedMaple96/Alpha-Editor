@@ -243,7 +243,7 @@ const Header = ({
 
 const tools = [
   { id: 'move', icon: MousePointer2Icon, label: '移动' },
-  { id: 'brush', icon: BrushIcon, label: '画笔（隐藏）' },
+  { id: 'brush', icon: BrushIcon, label: '画笔（涂抹）' },
   { id: 'eraser', icon: EraserIcon, label: '橡皮擦（还原）' },
   { id: 'rect-select', icon: BoxSelectIcon, label: '矩形选区' },
   { id: 'circle-select', icon: CircleIcon, label: '圆形选区' },

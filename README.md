@@ -1,4 +1,4 @@
-# Alpha Editor（预编译版）
+# Alpha Editor
 
 ## 1. 项目概述
 
@@ -53,7 +53,7 @@ npm run preview
 
 适用于在本机或服务器上“常驻”运行（关闭当前终端也不中断）。
 
-后台启动预览服务（推荐，基于构建产物 `dist/`）：
+后台启动服务（推荐，基于构建产物 `dist/`）：
 
 ```bash
 npm run build
