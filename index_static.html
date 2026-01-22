@@ -58,10 +58,6 @@
         const { useState, useEffect, useRef } = React;
         
         // --- Icons (Lucide) ---
-        // Lucide UMD exports 'lucide' global, but we need React components. 
-        // We can create simple wrappers or just use text for now if icons fail.
-        // Actually lucide-react is not UMD friendly easily. 
-        // Let's make simple SVG components.
         const Icon = ({ path }) => (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 {path}
@@ -75,17 +71,122 @@
         const MonitorIcon = () => <Icon path={<><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></>} />;
         const BrushIcon = () => <Icon path={<><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2.5 6.04 0 1.38-.52 2.5 2.2 2.5 3.18 0 2-2.5 6-2.5 1.65 0 3-1.35 3-3.02l-5.7-5.71Z"/></>} />;
         const EraserIcon = () => <Icon path={<><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></>} />;
-        const MousePointer2Icon = () => <Icon path={<><path d="m12 6 4 6-2.2 6H5.2L3 12h9Z"/><path d="m12 6 4 6"/></>} />; // Simplified
+        const MousePointer2Icon = () => <Icon path={<><path d="m12 6 4 6-2.2 6H5.2L3 12h9Z"/><path d="m12 6 4 6"/></>} />;
         const BoxSelectIcon = () => <Icon path={<><path d="M5 3a2 2 0 0 0-2 2"/><path d="M19 3a2 2 0 0 1 2 2"/><path d="M21 19a2 2 0 0 1-2 2"/><path d="M5 21a2 2 0 0 1-2-2"/><path d="M9 3h1"/><path d="M9 21h1"/><path d="M14 3h1"/><path d="M14 21h1"/><path d="M3 9v1"/><path d="M21 9v1"/><path d="M3 14v1"/><path d="M21 14v1"/></>} />;
         const CircleIcon = () => <Icon path={<circle cx="12" cy="12" r="10"/>} />;
         const LassoIcon = () => <Icon path={<><path d="M7 22a5 5 0 0 1-2-4"/><path d="M3.3 14A6.8 6.8 0 0 1 2 10c0-4.4 4.5-8 10-8s10 3.6 10 8-4.5 8-10 8c-1.2 0-2.3-.2-3.3-.5"/><path d="M5 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/><path d="M5 14v4"/><path d="M5 18l2-2"/></>} />;
+        const SettingsIcon = () => <Icon path={<><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></>} />;
+        const ChevronLeftIcon = () => <Icon path={<path d="m15 18-6-6 6-6" />} />;
+        const ChevronRightIcon = () => <Icon path={<path d="m9 18 6-6-6-6" />} />;
+        const XIcon = () => <Icon path={<><path d="M18 6 6 18" /><path d="m6 6 12 12" /></>} />;
 
-        // --- Types ---
-        // (Not needed in JS)
+        // --- Shortcuts Panel ---
+        const ShortcutsPanel = ({ shortcuts, onUpdate, onClose }) => {
+          const [editingId, setEditingId] = useState(null)
+          const [recordedKeys, setRecordedKeys] = useState([])
+
+          useEffect(() => {
+            if (!editingId) return
+
+            const handleKeyDown = (e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              
+              const key = e.key === ' ' ? 'Space' : e.key
+              // 忽略单独的修饰键按下，但如果组合键中包含它们则记录
+              if (['Control', 'Shift', 'Alt', 'Meta'].includes(key)) {
+                 // 我们需要修饰键作为组合的一部分，所以也记录，但要去重
+              }
+              
+              setRecordedKeys((prev) => {
+                if (prev.includes(key)) return prev
+                return [...prev, key]
+              })
+            }
+
+            window.addEventListener('keydown', handleKeyDown)
+            return () => {
+              window.removeEventListener('keydown', handleKeyDown)
+            }
+          }, [editingId])
+
+          const saveShortcut = () => {
+            if (editingId && recordedKeys.length > 0) {
+              onUpdate(editingId, recordedKeys)
+              setEditingId(null)
+              setRecordedKeys([])
+            }
+          }
+
+          const cancelEditing = () => {
+            setEditingId(null)
+            setRecordedKeys([])
+          }
+
+          return (
+            <div className="fixed inset-0 bg-background/80 backdrop-blur z-[100] flex items-center justify-center">
+              <div className="bg-background border border-accent rounded-lg shadow-2xl w-full max-w-md p-6 relative">
+                <button
+                  onClick={onClose}
+                  className="absolute right-4 top-4 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <XIcon />
+                </button>
+                
+                <h2 className="text-xl font-bold mb-6">快捷键设置</h2>
+                
+                <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                  {Object.entries(shortcuts).map(([id, config]) => (
+                    <div key={id} className="flex items-center justify-between p-3 bg-accent/20 rounded-lg">
+                      <span className="text-sm font-medium">{config.label}</span>
+                      
+                      <div className="flex items-center gap-2">
+                        {editingId === id ? (
+                          <div className="flex items-center gap-2">
+                            <div className="bg-primary/20 text-primary px-2 py-1 rounded text-xs border border-primary/30 min-w-[60px] text-center">
+                              {recordedKeys.length > 0 ? recordedKeys.join(' + ') : '请按键...'}
+                            </div>
+                            <button
+                              onClick={saveShortcut}
+                              className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded hover:bg-primary/90"
+                            >
+                              保存
+                            </button>
+                            <button
+                              onClick={cancelEditing}
+                              className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded hover:bg-muted/80"
+                            >
+                              取消
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setEditingId(id)
+                              setRecordedKeys([])
+                            }}
+                            className="bg-accent text-accent-foreground px-2 py-1 rounded text-xs border border-accent hover:border-primary/50 transition-colors min-w-[60px]"
+                          >
+                            {config.keys.join(' + ')}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6 text-xs text-muted-foreground">
+                  <p>提示：点击快捷键按钮开始录制，按下组合键后点击保存。</p>
+                  <p>鼠标滚轮控制：可在主界面直接使用滚轮调节画笔大小（需开启）。</p>
+                </div>
+              </div>
+            </div>
+          )
+        }
 
         // --- Components ---
         
-        const Header = ({ onUpload, onDownload, onUndo, onReset, onRedo, canUndo, canReset, canRedo, canDownload }) => {
+        const Header = ({ onUpload, onDownload, onUndo, onReset, onRedo, onOpenSettings, canUndo, canReset, canRedo, canDownload }) => {
             return (
                 <header className="h-14 border-b border-accent bg-background/80 backdrop-blur flex items-center px-6 justify-between z-50 relative">
                     <div className="flex items-center gap-4">
@@ -94,7 +195,7 @@
                             <span className="font-bold tracking-widest">Alpha 编辑器</span>
                         </div>
                         <div className="h-4 w-[1px] bg-accent" />
-                        <span className="text-xs text-muted-foreground">v1.0.0</span>
+                        <span className="text-xs text-muted-foreground">v1.1.0</span>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -152,6 +253,14 @@
                         >
                             <RedoIcon />
                         </button>
+                        <div className="h-4 w-[1px] bg-accent mx-2" />
+                        <button
+                          className="p-2 rounded transition-colors hover:bg-accent"
+                          onClick={onOpenSettings}
+                          title="设置快捷键"
+                        >
+                          <SettingsIcon />
+                        </button>
                     </div>
                 </header>
             );
@@ -159,22 +268,28 @@
 
         const tools = [
             { id: 'move', icon: MousePointer2Icon, label: '移动' },
-            { id: 'brush', icon: BrushIcon, label: '画笔（隐藏）' },
+            { id: 'brush', icon: BrushIcon, label: '画笔（涂抹）' },
             { id: 'eraser', icon: EraserIcon, label: '橡皮擦（还原）' },
             { id: 'rect-select', icon: BoxSelectIcon, label: '矩形选区' },
             { id: 'circle-select', icon: CircleIcon, label: '圆形选区' },
             { id: 'lasso-select', icon: LassoIcon, label: '套索' },
         ];
 
-        const Toolbar = ({ activeTool, onToolChange }) => {
+        const Toolbar = ({ activeTool, onToolChange, isOpen, onToggle }) => {
             return (
-                <div className="flex flex-col gap-2 p-2 bg-background/80 backdrop-blur border border-accent rounded-lg shadow-2xl">
+                <div className="flex items-start gap-2">
+                  <div
+                    className={window.clsx(
+                      "flex flex-col gap-2 p-2 bg-background/80 backdrop-blur border border-accent rounded-lg shadow-2xl transition-all duration-300 overflow-hidden",
+                      isOpen ? "w-16 opacity-100 translate-x-0" : "w-0 opacity-0 -translate-x-full p-0 border-0"
+                    )}
+                  >
                     {tools.map((tool) => (
                         <button
                             key={tool.id}
                             onClick={() => onToolChange(tool.id)}
                             className={window.clsx(
-                                "p-3 rounded-md transition-all relative group",
+                                "p-3 rounded-md transition-all relative group shrink-0",
                                 activeTool === tool.id 
                                 ? "bg-primary/20 text-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]" 
                                 : "hover:bg-accent text-muted-foreground hover:text-foreground"
@@ -187,14 +302,35 @@
                             )}
                         </button>
                     ))}
+                  </div>
+                  <button
+                    onClick={onToggle}
+                    className="bg-background/80 backdrop-blur border border-accent rounded-lg p-2 shadow-lg hover:bg-accent transition-colors text-muted-foreground"
+                    title={isOpen ? "收起工具栏" : "展开工具栏"}
+                  >
+                    {isOpen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+                  </button>
                 </div>
             );
         };
 
-        const PropertiesPanel = ({ state, onChange }) => {
+        const PropertiesPanel = ({ state, onChange, isOpen, onToggle }) => {
             return (
-                <div className="bg-background/80 backdrop-blur border border-accent rounded-lg p-4 shadow-2xl pointer-events-auto">
-                    <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4">属性</h3>
+                <div className="flex items-start gap-2 justify-end">
+                  <button
+                    onClick={onToggle}
+                    className="bg-background/80 backdrop-blur border border-accent rounded-lg p-2 shadow-lg hover:bg-accent transition-colors text-muted-foreground pointer-events-auto"
+                    title={isOpen ? "收起属性面板" : "展开属性面板"}
+                  >
+                    {isOpen ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+                  </button>
+                  <div
+                    className={window.clsx(
+                      "bg-background/80 backdrop-blur border border-accent rounded-lg p-4 shadow-2xl pointer-events-auto transition-all duration-300 overflow-hidden",
+                      isOpen ? "w-80 opacity-100 translate-x-0" : "w-0 opacity-0 translate-x-full p-0 border-0"
+                    )}
+                  >
+                    <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4 shrink-0">属性</h3>
                     
                     <div className="space-y-6">
                         <div className="space-y-2">
@@ -207,7 +343,7 @@
                                 min="10"
                                 max="500"
                                 value={state.brushSize}
-                                onChange={(e) => onChange('brushSize', parseInt(e.target.value))}
+                                onChange={(e) => onChange('brushSize', Number.parseInt(e.target.value, 10))}
                                 className="w-full h-1 bg-accent rounded-lg appearance-none cursor-pointer"
                             />
                         </div>
@@ -247,7 +383,7 @@
                                 max="1"
                                 step="0.01"
                                 value={state.opacity}
-                                onChange={(e) => onChange('opacity', parseFloat(e.target.value))}
+                                onChange={(e) => onChange('opacity', Number.parseFloat(e.target.value))}
                                 className="w-full h-1 bg-accent rounded-lg appearance-none cursor-pointer"
                             />
                         </div>
@@ -263,16 +399,17 @@
                                 max="4"
                                 step="0.01"
                                 value={state.zoom}
-                                onChange={(e) => onChange('zoom', parseFloat(e.target.value))}
+                                onChange={(e) => onChange('zoom', Number.parseFloat(e.target.value))}
                                 className="w-full h-1 bg-accent rounded-lg appearance-none cursor-pointer"
                             />
                         </div>
                     </div>
+                  </div>
                 </div>
             );
         };
 
-        const Canvas = ({ image, state, onHistoryChange }) => {
+        const Canvas = ({ image, state, onHistoryChange, onZoomChange, onBrushSizeChange, wheelAction }) => {
             const containerRef = useRef(null);
             const appRef = useRef(null);
             const resourcesRef = useRef({
@@ -307,6 +444,80 @@
             useEffect(() => {
                 historyChangeRef.current = onHistoryChange;
             }, [onHistoryChange]);
+
+            // Wheel Handler
+            useEffect(() => {
+                const container = containerRef.current
+                if (!container) return
+
+                const onWheel = (e) => {
+                  e.preventDefault()
+                  const delta = -e.deltaY
+                  let action = wheelAction
+
+                  // 允许通过按住 Alt 键临时切换到另一种模式
+                  if (e.altKey) {
+                    action = action === 'zoom' ? 'brush' : 'zoom'
+                  }
+                  // Ctrl + 滚轮通常是缩放
+                  if (e.ctrlKey) {
+                    action = 'zoom'
+                  }
+
+                  if (action === 'zoom') {
+                    const step = 0.05
+                    const currentZoom = state.zoom ?? 1
+                    const zoomFactor = delta > 0 ? 1.1 : 0.9
+                    const newZoom = Math.max(0.25, Math.min(4, currentZoom * zoomFactor))
+
+                    // 定点缩放逻辑
+                    const res = resourcesRef.current
+                    if (res && res.imageContainer && res.imageSprite) {
+                      // 获取鼠标在 Container 父级（contentLayer）坐标系下的位置
+                      // contentLayer 也是全屏的，所以 global 位置近似等于 local 位置
+                      const globalPos = { x: e.data?.global?.x ?? e.clientX, y: e.data?.global?.y ?? e.clientY }
+                      
+                      // 获取 canvas 相对窗口的位置
+                      const rect = container.getBoundingClientRect()
+                      const mouseX = e.clientX - rect.left
+                      const mouseY = e.clientY - rect.top
+                      
+                      // 我们需要 contentLayer 的引用来做 toLocal，但 contentLayer 在 res.layers 里
+                      // 实际上 contentLayer 也是全屏且未偏移，所以 (mouseX, mouseY) 就是 contentLayer 下的坐标
+                      
+                      // Container 当前位置
+                      const cx = res.imageContainer.x
+                      const cy = res.imageContainer.y
+                      
+                      // 鼠标相对于 Container 中心的偏移量
+                      const dx = mouseX - cx
+                      const dy = mouseY - cy
+
+                      // 新的 scale
+                      const nextScale = (res.baseScale || 1) * newZoom
+                      const currentScale = res.imageContainer.scale.x
+
+                      // 计算新的位置
+                      const scaleRatio = nextScale / currentScale
+                      const newCx = mouseX - dx * scaleRatio
+                      const newCy = mouseY - dy * scaleRatio
+
+                      res.imageContainer.x = newCx
+                      res.imageContainer.y = newCy
+                    }
+
+                    if (onZoomChange) onZoomChange(newZoom)
+                  } else if (action === 'brush') {
+                    const step = 10
+                    const currentSize = state.brushSize ?? 50
+                    const newSize = Math.max(10, Math.min(500, currentSize + (delta > 0 ? step : -step)))
+                    if (onBrushSizeChange) onBrushSizeChange(newSize)
+                  }
+                }
+
+                container.addEventListener('wheel', onWheel, { passive: false })
+                return () => container.removeEventListener('wheel', onWheel)
+            }, [state.zoom, state.brushSize, wheelAction, onZoomChange, onBrushSizeChange])
 
             // Init Pixi
             useEffect(() => {
@@ -384,6 +595,9 @@
                 return () => {
                     window.removeEventListener('resize', resize);
                     app.destroy(true, { children: true, texture: true, baseTexture: true });
+                    // 清理引用，防止在组件卸载后访问已销毁的对象导致 "Cannot read properties of null" 错误
+                    appRef.current = null;
+                    resourcesRef.current.layers = null;
                 };
             }, []);
 
@@ -395,6 +609,11 @@
                 const res = resourcesRef.current;
                 if (!res.layers) return;
                 if (res.imageContainer) {
+                    // 在销毁 imageContainer 之前，先将复用的图层移除，防止它们被连带销毁
+                    if (res.layers.brushPreview) res.imageContainer.removeChild(res.layers.brushPreview);
+                    if (res.layers.selectionPreview) res.imageContainer.removeChild(res.layers.selectionPreview);
+                    if (res.layers.selectionOutline) res.imageContainer.removeChild(res.layers.selectionOutline);
+
                     res.layers.contentLayer.removeChild(res.imageContainer);
                     res.imageContainer.destroy({ children: true });
                     res.imageContainer = null;
@@ -413,7 +632,6 @@
                 const baseTexture = PIXI.BaseTexture.from(image);
                 const originalTexture = new PIXI.Texture(baseTexture);
 
-                /** 初始化遮罩缓冲区（RGBA，Alpha 表示可见度） */
                 const maskWidth = image.width;
                 const maskHeight = image.height;
                 const rgba = new Uint8Array(maskWidth * maskHeight * 4);
@@ -443,11 +661,9 @@
                 imageSprite.anchor.set(0.5);
                 maskSprite.anchor.set(0.5);
                 
-                // Add both to container to ensure they share the same transform (scale/position)
                 container.addChild(imageSprite);
                 container.addChild(maskSprite);
 
-                // Overlay graphics should follow image transform; use texture (top-left) coordinate space
                 if (res.layers.brushPreview) {
                     res.layers.brushPreview.position.set(-image.width / 2, -image.height / 2);
                     container.addChild(res.layers.brushPreview);
@@ -461,11 +677,7 @@
                     container.addChild(res.layers.selectionOutline);
                 }
                 
-                // Mask should not be rendered directly, only used as a mask
-                // But it needs to be in the container hierarchy for transform sync
                 maskSprite.renderable = false;
-                
-                // Apply mask
                 imageSprite.mask = maskSprite;
                 
                 res.layers.contentLayer.addChild(container);
@@ -491,7 +703,6 @@
                     if (typeof cb === 'function') cb(payload);
                 };
 
-                /** 捕获当前遮罩的 Alpha 快照（用于撤销/重做） */
                 const captureMaskSnapshot = () => {
                     const m = resourcesRef.current.mask;
                     if (!m) return null;
@@ -501,7 +712,6 @@
                     return { width: m.width, height: m.height, alpha };
                 };
 
-                /** 应用遮罩的 Alpha 快照（用于撤销/重做） */
                 const applyMaskSnapshot = (snap) => {
                     const m = resourcesRef.current.mask;
                     if (!m || !snap) return false;
@@ -628,7 +838,6 @@
                 const res = resourcesRef.current;
                 if (!app || !res.layers) return;
 
-                /** 获取指针在原图纹理坐标系（左上角为 0,0）的位置 */
                 const getPointerTexturePos = (globalPoint) => {
                     if (!res.imageSprite || !image) return null;
                     const localPos = res.imageSprite.toLocal(globalPoint);
@@ -638,7 +847,6 @@
                     return { x, y };
                 };
 
-                /** 判断某点是否在当前选区内（无选区则恒为 true） */
                 const isInsideSelection = (x, y) => {
                     const sel = interactionRef.current.selection;
                     if (!sel || sel.type === 'none') return true;
@@ -665,7 +873,6 @@
                     return true;
                 };
 
-                /** 绘制：画笔用于“隐藏”（降低 Alpha），橡皮擦用于“恢复”（提升 Alpha） */
                 const drawAt = (x, y) => {
                     const m = res.mask;
                     if (!m) return;
@@ -715,7 +922,6 @@
                     m.texture.baseTexture.update();
                 };
 
-                /** 绘制当前选区轮廓 */
                 const renderSelectionOutline = () => {
                     const outline = res.layers.selectionOutline;
                     outline.clear();
@@ -811,7 +1017,6 @@
                     return true;
                 };
 
-                /** 更新光标与画笔预览 */
                 const updateBrushPreview = (e) => {
                     const preview = res.layers.brushPreview;
                     preview.clear();
@@ -989,27 +1194,11 @@
                 layer.on('pointerup', onPointerUp);
                 layer.on('pointerupoutside', onPointerUp);
 
-                const onKeyDown = (ev) => {
-                    const isMac = navigator.platform?.toLowerCase().includes('mac');
-                    const mod = isMac ? ev.metaKey : ev.ctrlKey;
-                    if (!mod) return;
-                    const key = ev.key?.toLowerCase();
-                    if (key !== 'z' && key !== 'y') return;
-                    ev.preventDefault();
-                    if (key === 'y' || (key === 'z' && ev.shiftKey)) {
-                        res.historyApi?.redo?.();
-                        return;
-                    }
-                    res.historyApi?.undo?.();
-                };
-                window.addEventListener('keydown', onKeyDown);
-                
                 return () => {
                     layer.off('pointerdown', onPointerDown);
                     layer.off('pointermove', onPointerMove);
                     layer.off('pointerup', onPointerUp);
                     layer.off('pointerupoutside', onPointerUp);
-                    window.removeEventListener('keydown', onKeyDown);
                 };
             }, [image]);
 
@@ -1036,6 +1225,35 @@
                 canUndo: false,
                 canRedo: false,
             });
+
+            const [panels, setPanels] = useState({
+              left: true,
+              right: true,
+            })
+
+            const [shortcuts, setShortcuts] = useState(() => {
+              const isMac = navigator.platform?.toLowerCase().includes('mac')
+              const mod = isMac ? 'Meta' : 'Control'
+              return {
+                toolMove: { keys: ['v'], label: '工具：移动' },
+                toolBrush: { keys: ['b'], label: '工具：画笔' },
+                toolEraser: { keys: ['e'], label: '工具：橡皮擦' },
+                toolRect: { keys: ['m'], label: '工具：矩形选区' },
+                toolCircle: { keys: ['c'], label: '工具：圆形选区' },
+                toolLasso: { keys: ['l'], label: '工具：套索' },
+                increaseBrushSize: { keys: [mod, 't', '='], label: '增大画笔' },
+                decreaseBrushSize: { keys: [mod, 't', '-'], label: '减小画笔' },
+                toggleBrushShape: { keys: ['x'], label: '切换画笔形状' },
+                increaseOpacity: { keys: [']'], label: '增加不透明度' },
+                decreaseOpacity: { keys: ['['], label: '减少不透明度' },
+                zoomIn: { keys: [mod, '='], label: '放大画布' },
+                zoomOut: { keys: [mod, '-'], label: '缩小画布' },
+                undo: { keys: [mod, 'z'], label: '撤销' },
+              }
+            })
+            
+            const [showShortcuts, setShowShortcuts] = useState(false)
+            const [wheelAction, setWheelAction] = useState('zoom') // 'zoom' or 'brush'
 
             const [image, setImage] = useState(null);
 
@@ -1098,6 +1316,92 @@
                 window.__alphaEditorDebug?.redo?.();
             };
 
+            // 快捷键处理逻辑
+            const pressedKeys = useRef(new Set())
+
+            useEffect(() => {
+              const handleKeyDown = (e) => {
+                // 忽略输入框中的按键
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+                
+                const key = e.key === ' ' ? 'Space' : e.key
+                pressedKeys.current.add(key)
+                
+                const checkShortcut = (config) => {
+                  if (!config || !config.keys) return false
+                  return config.keys.every(k => pressedKeys.current.has(k))
+                }
+
+                let matched = false
+                if (checkShortcut(shortcuts.toolMove)) {
+                  setEditorState(prev => ({ ...prev, activeTool: 'move' }))
+                  matched = true
+                } else if (checkShortcut(shortcuts.toolBrush)) {
+                  setEditorState(prev => ({ ...prev, activeTool: 'brush' }))
+                  matched = true
+                } else if (checkShortcut(shortcuts.toolEraser)) {
+                  setEditorState(prev => ({ ...prev, activeTool: 'eraser' }))
+                  matched = true
+                } else if (checkShortcut(shortcuts.toolRect)) {
+                  setEditorState(prev => ({ ...prev, activeTool: 'rect-select' }))
+                  matched = true
+                } else if (checkShortcut(shortcuts.toolCircle)) {
+                  setEditorState(prev => ({ ...prev, activeTool: 'circle-select' }))
+                  matched = true
+                } else if (checkShortcut(shortcuts.toolLasso)) {
+                  setEditorState(prev => ({ ...prev, activeTool: 'lasso-select' }))
+                  matched = true
+                } else if (checkShortcut(shortcuts.increaseBrushSize)) {
+                  setEditorState(prev => ({ ...prev, brushSize: Math.min(500, prev.brushSize + 10) }))
+                  matched = true
+                } else if (checkShortcut(shortcuts.decreaseBrushSize)) {
+                  setEditorState(prev => ({ ...prev, brushSize: Math.max(10, prev.brushSize - 10) }))
+                  matched = true
+                } else if (checkShortcut(shortcuts.toggleBrushShape)) {
+                  setEditorState(prev => ({ ...prev, brushShape: prev.brushShape === 'circle' ? 'square' : 'circle' }))
+                  matched = true
+                } else if (checkShortcut(shortcuts.increaseOpacity)) {
+                  setEditorState(prev => ({ ...prev, opacity: Math.min(1, prev.opacity + 0.05) }))
+                  matched = true
+                } else if (checkShortcut(shortcuts.decreaseOpacity)) {
+                  setEditorState(prev => ({ ...prev, opacity: Math.max(0, prev.opacity - 0.05) }))
+                  matched = true
+                } else if (checkShortcut(shortcuts.zoomIn)) {
+                  setEditorState(prev => ({ ...prev, zoom: Math.min(4, (prev.zoom ?? 1) * 1.1) }))
+                  matched = true
+                } else if (checkShortcut(shortcuts.zoomOut)) {
+                  setEditorState(prev => ({ ...prev, zoom: Math.max(0.25, (prev.zoom ?? 1) * 0.9) }))
+                  matched = true
+                } else if (checkShortcut(shortcuts.undo)) {
+                  window.__alphaEditorDebug?.undo?.()
+                  matched = true
+                }
+                
+                if (matched) {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }
+              }
+
+              const handleKeyUp = (e) => {
+                const key = e.key === ' ' ? 'Space' : e.key
+                pressedKeys.current.delete(key)
+              }
+              
+              const handleBlur = () => {
+                  pressedKeys.current.clear()
+              }
+
+              window.addEventListener('keydown', handleKeyDown)
+              window.addEventListener('keyup', handleKeyUp)
+              window.addEventListener('blur', handleBlur)
+              return () => {
+                window.removeEventListener('keydown', handleKeyDown)
+                window.removeEventListener('keyup', handleKeyUp)
+                window.removeEventListener('blur', handleBlur)
+              }
+            }, [shortcuts])
+
             return (
                 <div 
                     className="flex flex-col h-screen w-screen bg-background text-foreground relative overflow-hidden"
@@ -1110,6 +1414,7 @@
                         onUndo={handleUndo}
                         onReset={handleReset}
                         onRedo={handleRedo}
+                        onOpenSettings={() => setShowShortcuts(true)}
                         canUndo={editorState.canUndo}
                         canDownload={!!image}
                         canReset={!!image}
@@ -1117,7 +1422,14 @@
                     />
                     <main className="flex-1 relative bg-grid">
                         {image ? (
-                            <Canvas image={image} state={editorState} onHistoryChange={handleHistoryChange} />
+                            <Canvas
+                              image={image}
+                              state={editorState}
+                              onHistoryChange={handleHistoryChange}
+                              onZoomChange={(val) => setEditorState((prev) => ({ ...prev, zoom: val }))}
+                              onBrushSizeChange={(val) => setEditorState((prev) => ({ ...prev, brushSize: val }))}
+                              wheelAction={wheelAction}
+                            />
                         ) : (
                             <div className="absolute inset-0 flex items-center justify-center text-accent-foreground/50 pointer-events-none">
                                 <div className="text-center">
@@ -1127,12 +1439,29 @@
                             </div>
                         )}
                         <div className="absolute left-6 top-1/2 -translate-y-1/2 z-50">
-                            <Toolbar activeTool={editorState.activeTool} onToolChange={(tool) => setEditorState(prev => ({ ...prev, activeTool: tool }))} />
+                            <Toolbar
+                              activeTool={editorState.activeTool}
+                              onToolChange={(tool) => setEditorState(prev => ({ ...prev, activeTool: tool }))}
+                              isOpen={panels.left}
+                              onToggle={() => setPanels((prev) => ({ ...prev, left: !prev.left }))}
+                            />
                         </div>
-                        <div className="absolute right-6 top-6 bottom-6 w-80 pointer-events-none z-50">
-                            <PropertiesPanel state={editorState} onChange={(key, val) => setEditorState(prev => ({ ...prev, [key]: val }))} />
+                        <div className="absolute right-6 top-6 bottom-6 pointer-events-none z-50 flex flex-col justify-center">
+                            <PropertiesPanel
+                              state={editorState}
+                              onChange={(key, val) => setEditorState(prev => ({ ...prev, [key]: val }))}
+                              isOpen={panels.right}
+                              onToggle={() => setPanels((prev) => ({ ...prev, right: !prev.right }))}
+                            />
                         </div>
                     </main>
+                    {showShortcuts && (
+                      <ShortcutsPanel
+                        shortcuts={shortcuts}
+                        onUpdate={(id, keys) => setShortcuts((prev) => ({ ...prev, [id]: { ...prev[id], keys } }))}
+                        onClose={() => setShowShortcuts(false)}
+                      />
+                    )}
                 </div>
             );
         };

@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState, useCallback } from 'react'
 import clsx from 'clsx'
 import * as PIXI from 'pixi.js'
+import { ShortcutsPanel } from './ShortcutsPanel'
 
 const Icon = ({ path }) => (
   <svg
@@ -159,12 +160,24 @@ const LassoIcon = () => (
   />
 )
 
+const SettingsIcon = () => (
+  <Icon
+    path={
+      <>
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+      </>
+    }
+  />
+)
+
 const Header = ({
   onUpload,
   onDownload,
   onUndo,
   onReset,
   onRedo,
+  onOpenSettings,
   canUndo,
   canReset,
   canRedo,
@@ -178,7 +191,7 @@ const Header = ({
           <span className="font-bold tracking-widest">Alpha 编辑器</span>
         </div>
         <div className="h-4 w-[1px] bg-accent" />
-        <span className="text-xs text-muted-foreground">v1.0.0</span>
+        <span className="text-xs text-muted-foreground">v1.1.0</span>
       </div>
 
       <div className="flex items-center gap-2">
@@ -236,6 +249,14 @@ const Header = ({
         >
           <RedoIcon />
         </button>
+        <div className="h-4 w-[1px] bg-accent mx-2" />
+        <button
+          className="p-2 rounded transition-colors hover:bg-accent"
+          onClick={onOpenSettings}
+          title="设置快捷键"
+        >
+          <SettingsIcon />
+        </button>
       </div>
     </header>
   )
@@ -250,38 +271,77 @@ const tools = [
   { id: 'lasso-select', icon: LassoIcon, label: '套索' },
 ]
 
-const Toolbar = ({ activeTool, onToolChange }) => {
+const ChevronLeftIcon = () => (
+  <Icon
+    path={<path d="m15 18-6-6 6-6" />}
+  />
+)
+
+const ChevronRightIcon = () => (
+  <Icon
+    path={<path d="m9 18 6-6-6-6" />}
+  />
+)
+
+const Toolbar = ({ activeTool, onToolChange, isOpen, onToggle }) => {
   return (
-    <div className="flex flex-col gap-2 p-2 bg-background/80 backdrop-blur border border-accent rounded-lg shadow-2xl">
-      {tools.map((tool) => (
-        <button
-          key={tool.id}
-          onClick={() => onToolChange(tool.id)}
-          className={clsx(
-            'p-3 rounded-md transition-all relative group',
-            activeTool === tool.id
-              ? 'bg-primary/20 text-primary shadow-[0_0_10px_rgba(0,229,255,0.25)]'
-              : 'hover:bg-accent text-muted-foreground hover:text-foreground',
-          )}
-          title={tool.label}
-        >
-          <tool.icon />
-          {activeTool === tool.id && (
-            <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-primary rounded-l-md" />
-          )}
-        </button>
-      ))}
+    <div className="flex items-start gap-2">
+      <div
+        className={clsx(
+          "flex flex-col gap-2 p-2 bg-background/80 backdrop-blur border border-accent rounded-lg shadow-2xl transition-all duration-300 overflow-hidden",
+          isOpen ? "w-16 opacity-100 translate-x-0" : "w-0 opacity-0 -translate-x-full p-0 border-0"
+        )}
+      >
+        {tools.map((tool) => (
+          <button
+            key={tool.id}
+            onClick={() => onToolChange(tool.id)}
+            className={clsx(
+              'p-3 rounded-md transition-all relative group shrink-0',
+              activeTool === tool.id
+                ? 'bg-primary/20 text-primary shadow-[0_0_10px_rgba(0,229,255,0.25)]'
+                : 'hover:bg-accent text-muted-foreground hover:text-foreground',
+            )}
+            title={tool.label}
+          >
+            <tool.icon />
+            {activeTool === tool.id && (
+              <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-primary rounded-l-md" />
+            )}
+          </button>
+        ))}
+      </div>
+      <button
+        onClick={onToggle}
+        className="bg-background/80 backdrop-blur border border-accent rounded-lg p-2 shadow-lg hover:bg-accent transition-colors text-muted-foreground"
+        title={isOpen ? "收起工具栏" : "展开工具栏"}
+      >
+        {isOpen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+      </button>
     </div>
   )
 }
 
-const PropertiesPanel = ({ state, onChange }) => {
+const PropertiesPanel = ({ state, onChange, isOpen, onToggle }) => {
   return (
-    <div className="bg-background/80 backdrop-blur border border-accent rounded-lg p-4 shadow-2xl pointer-events-auto">
-      <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4">属性</h3>
+    <div className="flex items-start gap-2 justify-end">
+      <button
+        onClick={onToggle}
+        className="bg-background/80 backdrop-blur border border-accent rounded-lg p-2 shadow-lg hover:bg-accent transition-colors text-muted-foreground pointer-events-auto"
+        title={isOpen ? "收起属性面板" : "展开属性面板"}
+      >
+        {isOpen ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+      </button>
+      <div
+        className={clsx(
+          "bg-background/80 backdrop-blur border border-accent rounded-lg p-4 shadow-2xl pointer-events-auto transition-all duration-300 overflow-hidden",
+          isOpen ? "w-80 opacity-100 translate-x-0" : "w-0 opacity-0 translate-x-full p-0 border-0"
+        )}
+      >
+        <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4 shrink-0">属性</h3>
 
-      <div className="space-y-6">
-        <div className="space-y-2">
+        <div className="space-y-6">
+          <div className="space-y-2">
           <div className="flex justify-between text-xs">
             <span>画笔大小</span>
             <span className="text-primary font-mono">{state.brushSize}px</span>
@@ -357,10 +417,11 @@ const PropertiesPanel = ({ state, onChange }) => {
         </div>
       </div>
     </div>
+    </div>
   )
 }
 
-const Canvas = ({ image, state, onHistoryChange }) => {
+const Canvas = ({ image, state, onHistoryChange, onZoomChange, onBrushSizeChange, wheelAction }) => {
   const containerRef = useRef(null)
   const appRef = useRef(null)
   const resourcesRef = useRef({
@@ -477,6 +538,9 @@ const Canvas = ({ image, state, onHistoryChange }) => {
     return () => {
       window.removeEventListener('resize', resize)
       app.destroy(true, { children: true, texture: true, baseTexture: true })
+      // 清理引用，防止在组件卸载后访问已销毁的对象导致 "Cannot read properties of null" 错误
+      appRef.current = null
+      resourcesRef.current.layers = null
     }
   }, [])
 
@@ -488,6 +552,11 @@ const Canvas = ({ image, state, onHistoryChange }) => {
     if (!res.layers) return
 
     if (res.imageContainer) {
+      // 在销毁 imageContainer 之前，先将复用的图层移除，防止它们被连带销毁
+      if (res.layers.brushPreview) res.imageContainer.removeChild(res.layers.brushPreview)
+      if (res.layers.selectionPreview) res.imageContainer.removeChild(res.layers.selectionPreview)
+      if (res.layers.selectionOutline) res.imageContainer.removeChild(res.layers.selectionOutline)
+      
       res.layers.contentLayer.removeChild(res.imageContainer)
       res.imageContainer.destroy({ children: true })
       res.imageContainer = null
@@ -1066,30 +1135,89 @@ const Canvas = ({ image, state, onHistoryChange }) => {
     layer.on('pointerup', onPointerUp)
     layer.on('pointerupoutside', onPointerUp)
 
-    const onKeyDown = (ev) => {
-      const isMac = navigator.platform?.toLowerCase().includes('mac')
-      const mod = isMac ? ev.metaKey : ev.ctrlKey
-      if (!mod) return
-      const key = ev.key?.toLowerCase()
-      if (key !== 'z' && key !== 'y') return
-      ev.preventDefault()
-      if (key === 'y' || (key === 'z' && ev.shiftKey)) {
-        res.historyApi?.redo?.()
-        return
-      }
-      res.historyApi?.undo?.()
-    }
-
-    window.addEventListener('keydown', onKeyDown)
-
     return () => {
       layer.off('pointerdown', onPointerDown)
       layer.off('pointermove', onPointerMove)
       layer.off('pointerup', onPointerUp)
       layer.off('pointerupoutside', onPointerUp)
-      window.removeEventListener('keydown', onKeyDown)
     }
   }, [image])
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const onWheel = (e) => {
+      e.preventDefault()
+      const delta = -e.deltaY
+      let action = wheelAction
+
+      // 允许通过按住 Alt 键临时切换到另一种模式
+      if (e.altKey) {
+        action = action === 'zoom' ? 'brush' : 'zoom'
+      }
+      // Ctrl + 滚轮通常是缩放
+      if (e.ctrlKey) {
+        action = 'zoom'
+      }
+
+      if (action === 'zoom') {
+        const step = 0.05
+        const currentZoom = state.zoom ?? 1
+        const zoomFactor = delta > 0 ? 1.1 : 0.9
+        const newZoom = Math.max(0.25, Math.min(4, currentZoom * zoomFactor))
+
+        // 定点缩放逻辑
+        const res = resourcesRef.current // 获取当前引用
+        if (res && res.imageContainer && res.imageSprite) {
+          // 获取鼠标在 Container 父级（contentLayer）坐标系下的位置
+          // contentLayer 也是全屏的，所以 global 位置近似等于 local 位置
+          const globalPos = { x: e.data?.global?.x ?? e.clientX, y: e.data?.global?.y ?? e.clientY }
+          // 注意：e.data 是 PIXI 事件，但 wheel 是原生事件，所以这里 e 是原生 WheelEvent
+          // 原生事件没有 data.global，需要用 clientX/clientY 并且要考虑 canvas 的 offset
+          // 但这里 container 是全屏的，所以 clientX/Y 大致可用，但更准确的是获取 boundingClientRect
+          
+          // 获取 canvas 相对窗口的位置
+          const rect = container.getBoundingClientRect()
+          const mouseX = e.clientX - rect.left
+          const mouseY = e.clientY - rect.top
+          
+          // 我们需要 contentLayer 的引用来做 toLocal，但 contentLayer 在 res.layers 里
+          // 实际上 contentLayer 也是全屏且未偏移，所以 (mouseX, mouseY) 就是 contentLayer 下的坐标
+          
+          // Container 当前位置
+          const cx = res.imageContainer.x
+          const cy = res.imageContainer.y
+          
+          // 鼠标相对于 Container 中心的偏移量
+          const dx = mouseX - cx
+          const dy = mouseY - cy
+
+          // 新的 scale
+          const nextScale = (res.baseScale || 1) * newZoom
+          const currentScale = res.imageContainer.scale.x
+
+          // 计算新的位置
+          const scaleRatio = nextScale / currentScale
+          const newCx = mouseX - dx * scaleRatio
+          const newCy = mouseY - dy * scaleRatio
+
+          res.imageContainer.x = newCx
+          res.imageContainer.y = newCy
+        }
+
+        if (onZoomChange) onZoomChange(newZoom)
+      } else if (action === 'brush') {
+        const step = 10
+        const currentSize = state.brushSize ?? 50
+        const newSize = Math.max(10, Math.min(500, currentSize + (delta > 0 ? step : -step)))
+        if (onBrushSizeChange) onBrushSizeChange(newSize)
+      }
+    }
+
+    container.addEventListener('wheel', onWheel, { passive: false })
+    return () => container.removeEventListener('wheel', onWheel)
+  }, [state.zoom, state.brushSize, wheelAction, onZoomChange, onBrushSizeChange])
 
   useEffect(() => {
     const res = resourcesRef.current
@@ -1114,6 +1242,35 @@ export default function App() {
     canUndo: false,
     canRedo: false,
   })
+
+  const [panels, setPanels] = useState({
+    left: true,
+    right: true,
+  })
+
+  const [shortcuts, setShortcuts] = useState(() => {
+    const isMac = typeof navigator !== 'undefined' && navigator.platform?.toLowerCase().includes('mac')
+    const mod = isMac ? 'Meta' : 'Control'
+    return {
+      toolMove: { keys: ['v'], label: '工具：移动' },
+      toolBrush: { keys: ['b'], label: '工具：画笔' },
+      toolEraser: { keys: ['e'], label: '工具：橡皮擦' },
+      toolRect: { keys: ['m'], label: '工具：矩形选区' },
+      toolCircle: { keys: ['c'], label: '工具：圆形选区' },
+      toolLasso: { keys: ['l'], label: '工具：套索' },
+      increaseBrushSize: { keys: [mod, 't', '='], label: '增大画笔' },
+      decreaseBrushSize: { keys: [mod, 't', '-'], label: '减小画笔' },
+      toggleBrushShape: { keys: ['x'], label: '切换画笔形状' },
+      increaseOpacity: { keys: [']'], label: '增加不透明度' },
+      decreaseOpacity: { keys: ['['], label: '减少不透明度' },
+      zoomIn: { keys: [mod, '='], label: '放大画布' },
+      zoomOut: { keys: [mod, '-'], label: '缩小画布' },
+      undo: { keys: [mod, 'z'], label: '撤销' },
+    }
+  })
+  
+  const [showShortcuts, setShowShortcuts] = useState(false)
+  const [wheelAction, setWheelAction] = useState('zoom') // 'zoom' or 'brush'
 
   const [image, setImage] = useState(null)
 
@@ -1175,6 +1332,92 @@ export default function App() {
     window.__alphaEditorDebug?.redo?.()
   }
 
+  // 快捷键处理逻辑
+  const pressedKeys = useRef(new Set())
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // 忽略输入框中的按键
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+      
+      const key = e.key === ' ' ? 'Space' : e.key
+      pressedKeys.current.add(key)
+      
+      const checkShortcut = (config) => {
+        if (!config || !config.keys) return false
+        return config.keys.every(k => pressedKeys.current.has(k))
+      }
+
+      let matched = false
+      if (checkShortcut(shortcuts.toolMove)) {
+        setEditorState(prev => ({ ...prev, activeTool: 'move' }))
+        matched = true
+      } else if (checkShortcut(shortcuts.toolBrush)) {
+        setEditorState(prev => ({ ...prev, activeTool: 'brush' }))
+        matched = true
+      } else if (checkShortcut(shortcuts.toolEraser)) {
+        setEditorState(prev => ({ ...prev, activeTool: 'eraser' }))
+        matched = true
+      } else if (checkShortcut(shortcuts.toolRect)) {
+        setEditorState(prev => ({ ...prev, activeTool: 'rect-select' }))
+        matched = true
+      } else if (checkShortcut(shortcuts.toolCircle)) {
+        setEditorState(prev => ({ ...prev, activeTool: 'circle-select' }))
+        matched = true
+      } else if (checkShortcut(shortcuts.toolLasso)) {
+        setEditorState(prev => ({ ...prev, activeTool: 'lasso-select' }))
+        matched = true
+      } else if (checkShortcut(shortcuts.increaseBrushSize)) {
+        setEditorState(prev => ({ ...prev, brushSize: Math.min(500, prev.brushSize + 10) }))
+        matched = true
+      } else if (checkShortcut(shortcuts.decreaseBrushSize)) {
+        setEditorState(prev => ({ ...prev, brushSize: Math.max(10, prev.brushSize - 10) }))
+        matched = true
+      } else if (checkShortcut(shortcuts.toggleBrushShape)) {
+        setEditorState(prev => ({ ...prev, brushShape: prev.brushShape === 'circle' ? 'square' : 'circle' }))
+        matched = true
+      } else if (checkShortcut(shortcuts.increaseOpacity)) {
+        setEditorState(prev => ({ ...prev, opacity: Math.min(1, prev.opacity + 0.05) }))
+        matched = true
+      } else if (checkShortcut(shortcuts.decreaseOpacity)) {
+        setEditorState(prev => ({ ...prev, opacity: Math.max(0, prev.opacity - 0.05) }))
+        matched = true
+      } else if (checkShortcut(shortcuts.zoomIn)) {
+        setEditorState(prev => ({ ...prev, zoom: Math.min(4, (prev.zoom ?? 1) * 1.1) }))
+        matched = true
+      } else if (checkShortcut(shortcuts.zoomOut)) {
+        setEditorState(prev => ({ ...prev, zoom: Math.max(0.25, (prev.zoom ?? 1) * 0.9) }))
+        matched = true
+      } else if (checkShortcut(shortcuts.undo)) {
+        window.__alphaEditorDebug?.undo?.()
+        matched = true
+      }
+      
+      if (matched) {
+        e.preventDefault()
+        e.stopPropagation()
+      }
+    }
+
+    const handleKeyUp = (e) => {
+      const key = e.key === ' ' ? 'Space' : e.key
+      pressedKeys.current.delete(key)
+    }
+    
+    const handleBlur = () => {
+        pressedKeys.current.clear()
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+    window.addEventListener('blur', handleBlur)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+      window.removeEventListener('blur', handleBlur)
+    }
+  }, [shortcuts])
+
   return (
     <div
       className="flex flex-col h-screen w-screen bg-background text-foreground relative overflow-hidden"
@@ -1187,6 +1430,7 @@ export default function App() {
         onUndo={handleUndo}
         onReset={handleReset}
         onRedo={handleRedo}
+        onOpenSettings={() => setShowShortcuts(true)}
         canUndo={editorState.canUndo}
         canDownload={!!image}
         canReset={!!image}
@@ -1194,7 +1438,14 @@ export default function App() {
       />
       <main className="flex-1 relative bg-grid">
         {image ? (
-          <Canvas image={image} state={editorState} onHistoryChange={handleHistoryChange} />
+          <Canvas
+            image={image}
+            state={editorState}
+            onHistoryChange={handleHistoryChange}
+            onZoomChange={(val) => setEditorState((prev) => ({ ...prev, zoom: val }))}
+            onBrushSizeChange={(val) => setEditorState((prev) => ({ ...prev, brushSize: val }))}
+            wheelAction={wheelAction}
+          />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-accent-foreground/50 pointer-events-none">
             <div className="text-center">
@@ -1207,15 +1458,26 @@ export default function App() {
           <Toolbar
             activeTool={editorState.activeTool}
             onToolChange={(tool) => setEditorState((prev) => ({ ...prev, activeTool: tool }))}
+            isOpen={panels.left}
+            onToggle={() => setPanels((prev) => ({ ...prev, left: !prev.left }))}
           />
         </div>
-        <div className="absolute right-6 top-6 bottom-6 w-80 pointer-events-none z-50">
+        <div className="absolute right-6 top-6 bottom-6 pointer-events-none z-50 flex flex-col justify-center">
           <PropertiesPanel
             state={editorState}
             onChange={(key, val) => setEditorState((prev) => ({ ...prev, [key]: val }))}
+            isOpen={panels.right}
+            onToggle={() => setPanels((prev) => ({ ...prev, right: !prev.right }))}
           />
         </div>
       </main>
+      {showShortcuts && (
+        <ShortcutsPanel
+          shortcuts={shortcuts}
+          onUpdate={(id, keys) => setShortcuts((prev) => ({ ...prev, [id]: { ...prev[id], keys } }))}
+          onClose={() => setShowShortcuts(false)}
+        />
+      )}
     </div>
   )
 }
