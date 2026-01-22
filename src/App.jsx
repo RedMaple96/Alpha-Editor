@@ -385,20 +385,21 @@ const Toolbar = ({ activeTool, onToolChange, isOpen, onToggle }) => {
 
 const PropertiesPanel = ({ state, onChange, isOpen, onToggle }) => {
   return (
-    <div className="flex items-start gap-2 justify-end">
+    <div className={clsx("flex items-start transition-all", isOpen ? "gap-2" : "gap-0")}>
       <button
         onClick={onToggle}
-        className="bg-background/80 backdrop-blur border border-accent rounded-lg p-2 shadow-lg hover:bg-accent transition-colors text-muted-foreground pointer-events-auto"
+        className="bg-background/80 backdrop-blur border border-accent rounded-lg w-10 h-10 flex items-center justify-center shadow-lg hover:bg-accent transition-colors text-muted-foreground pointer-events-auto shrink-0 z-10"
         title={isOpen ? "收起属性面板" : "展开属性面板"}
       >
         {isOpen ? <ChevronRightIcon /> : <ChevronLeftIcon />}
       </button>
       <div
         className={clsx(
-          "bg-background/80 backdrop-blur border border-accent rounded-lg p-4 shadow-2xl pointer-events-auto transition-all duration-300 overflow-hidden",
-          isOpen ? "w-80 opacity-100 translate-x-0" : "w-0 opacity-0 translate-x-full p-0 border-0"
+          "bg-background/80 backdrop-blur border border-accent rounded-lg shadow-2xl pointer-events-auto transition-all duration-300 overflow-hidden",
+          isOpen ? "w-80 opacity-100 p-4 translate-x-0" : "w-0 opacity-0 p-0 border-0 translate-x-0"
         )}
       >
+        <div className="w-72">
         <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4 shrink-0">属性</h3>
 
         <div className="space-y-6">
@@ -524,6 +525,7 @@ const PropertiesPanel = ({ state, onChange, isOpen, onToggle }) => {
           </div>
         </div>
       </div>
+    </div>
     </div>
     </div>
   )
