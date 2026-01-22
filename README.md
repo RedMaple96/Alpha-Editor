@@ -37,6 +37,21 @@ npm run dev
 默认访问：
 
 - http://localhost:5173/
+- http://localhost:5173/index_static.html
+
+`index_static.html` 打开方式：
+
+- 方式 A（推荐）：启动开发服务后访问 `http://localhost:5173/index_static.html`
+- 方式 B：直接用浏览器打开本地文件 `./index_static.html`（双击或拖入浏览器）
+- 方式 C：使用任意静态服务器托管仓库根目录后访问 `/index_static.html`，例如：
+
+```bash
+python3 -m http.server 8080
+```
+
+然后访问：
+
+- http://localhost:8080/index_static.html
 
 ### 2.4 生产构建与本地预览
 
@@ -104,11 +119,13 @@ lsof -ti :4173 | xargs kill
 当前仓库已完成“预编译 + 本地依赖”的工程化改造，开发与生产均通过 Vite 构建输出静态资源：
 
 - [index.html](./index.html)：应用入口（开发与生产）
+- [index_static.html](./index_static.html)：静态兼容入口（CDN + Babel，便于快速验证/演示；与 `src/App.jsx` 不是同一套实现）
 - [src/main.jsx](./src/main.jsx)：应用启动入口（React 挂载）
 - [src/App.jsx](./src/App.jsx)：编辑器全部业务逻辑（React + PixiJS）
 
 说明：
 
+- `index_static.html` 可通过 Vite 开发服务器访问（`/index_static.html`），也可直接用浏览器打开；但它默认不参与 `npm run build` 的产物输出，如需将该入口一并输出到 `dist/`，需在 `vite.config.js` 的 `build.rollupOptions.input` 中显式添加该 HTML 入口
 - 现在不再使用 `type="text/babel"`，JSX 会在构建阶段预编译
 - React 生产构建时会自动使用生产模式（无开发警告、体积更小）
 - 所有依赖通过 npm 安装并打包到 `dist/assets/*`，不再依赖外部 CDN
