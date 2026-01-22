@@ -476,6 +476,53 @@ const PropertiesPanel = ({ state, onChange, isOpen, onToggle }) => {
             className="w-full h-1 bg-accent rounded-lg appearance-none cursor-pointer"
           />
         </div>
+
+        <div className="pt-4 border-t border-accent space-y-4">
+          <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">选区设置</h4>
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs">
+              <span>线框粗细</span>
+              <span className="text-primary font-mono">{state.selectionWidth ?? 1}px</span>
+            </div>
+            <input
+              type="range"
+              min="1"
+              max="10"
+              step="1"
+              value={state.selectionWidth ?? 1}
+              onChange={(e) => onChange('selectionWidth', Number.parseInt(e.target.value, 10))}
+              className="w-full h-1 bg-accent rounded-lg appearance-none cursor-pointer"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs">
+              <span>线框颜色</span>
+              <span className="text-primary font-mono uppercase">{state.selectionColor ?? '#00e5ff'}</span>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {['#00e5ff', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#ffffff', '#000000'].map((color) => (
+                <button
+                  key={color}
+                  onClick={() => onChange('selectionColor', color)}
+                  className={clsx(
+                    "w-6 h-6 rounded-full border border-accent transition-transform hover:scale-110",
+                    state.selectionColor === color ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""
+                  )}
+                  style={{ backgroundColor: color }}
+                  title={color}
+                />
+              ))}
+              <input
+                 type="color"
+                 value={state.selectionColor ?? '#00e5ff'}
+                 onChange={(e) => onChange('selectionColor', e.target.value)}
+                 className="w-6 h-6 p-0 border-0 rounded-full overflow-hidden cursor-pointer"
+                 title="自定义颜色"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     </div>
@@ -858,7 +905,7 @@ const Canvas = ({ image, state, onHistoryChange, onZoomChange, onBrushSizeChange
         const pts = sel.points
         if (!pts || pts.length < 3) return true
         let inside = false
-        for (let i = 0, j = pts.length - 1; i < pts.length; j = i += 1) {
+        for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
           const xi = pts[i].x
           const yi = pts[i].y
           const xj = pts[j].x
@@ -923,7 +970,23 @@ const Canvas = ({ image, state, onHistoryChange, onZoomChange, onBrushSizeChange
       outline.clear()
       const sel = interactionRef.current.selection
       if (!sel || sel.type === 'none') return
-      outline.lineStyle(1, 0x00e5ff, 0.9)
+      
+      const s = stateRef.current
+      const width = s.selectionWidth ?? 1
+      // PIXI 6 lineStyle 接受 number (hex) 或 string color? 
+      // 实际上 PIXI 6.5.9 的 Graphics lineStyle 第一个参数是 width，第二个是 color
+      // color 可以是 number (0xRRGGBB)。如果是 string '#RRGGBB' 需要转换。
+      // PIXI.utils.string2hex 可以做转换。
+      let color = 0x00e5ff
+      if (s.selectionColor) {
+          if (typeof s.selectionColor === 'string' && s.selectionColor.startsWith('#')) {
+              color = parseInt(s.selectionColor.slice(1), 16)
+          } else if (typeof s.selectionColor === 'number') {
+              color = s.selectionColor
+          }
+      }
+      
+      outline.lineStyle(width, color, 0.9)
       if (sel.type === 'rect') {
         outline.drawRect(sel.x, sel.y, sel.w, sel.h)
         return
@@ -950,7 +1013,7 @@ const Canvas = ({ image, state, onHistoryChange, onZoomChange, onBrushSizeChange
       const pointInLasso = (x, y, pts) => {
         if (!pts || pts.length < 3) return false
         let inside = false
-        for (let i = 0, j = pts.length - 1; i < pts.length; j = i += 1) {
+        for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
           const xi = pts[i].x
           const yi = pts[i].y
           const xj = pts[j].x
@@ -1097,7 +1160,20 @@ const Canvas = ({ image, state, onHistoryChange, onZoomChange, onBrushSizeChange
 
       const preview = res.layers.selectionPreview
       preview.clear()
-      preview.lineStyle(1, 0xffffff, 0.6)
+      
+      const s = stateRef.current
+      const width = s.selectionWidth ?? 1
+      let color = 0xffffff
+      if (s.selectionColor) {
+          if (typeof s.selectionColor === 'string' && s.selectionColor.startsWith('#')) {
+              color = parseInt(s.selectionColor.slice(1), 16)
+          } else if (typeof s.selectionColor === 'number') {
+              color = s.selectionColor
+          }
+      }
+      // 预览时稍微透明一点
+      preview.lineStyle(width, color, 0.6)
+      
       if (draft.type === 'rect') {
         const x = Math.min(draft.startX, pos.x)
         const y = Math.min(draft.startY, pos.y)
